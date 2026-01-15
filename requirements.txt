@@ -10,3 +10,4 @@ Pillow
 drf-spectacular
 ruff
 djangorestframework-simplejwt
+djoser
