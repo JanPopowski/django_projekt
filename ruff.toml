@@ -1,0 +1,10 @@
+# ruff.toml
+line-length = 120
+
+[lint]
+# E: pycodestyle errors, F: Pyflakes, I: isort
+select = ["E", "F", "I"]
+ignore = []
+
+[format]
+quote-style = "double"

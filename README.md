@@ -1,5 +1,3 @@
-# django_projekt
-
 Wymagania Funkcjonalne
 
 Użytkownicy i Profile 6 pkt
