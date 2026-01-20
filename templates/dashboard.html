@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold">👋 Witaj, {{ user.username }}!</h2>
+        <p class="text-muted">Oto Twoje zadania na najbliższy czas.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'project-create' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-folder-plus"></i> Nowy Projekt
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <i class="bi bi-lightning-charge-fill text-warning"></i> Twoje Pilne Zadania
+            </div>
+            <div class="list-group list-group-flush">
+                {% if my_tasks %}
+                    {% for task in my_tasks %}
+                    <a href="{% url 'project-detail' task.project.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold">{{ task.title }}</span>
+                            <br>
+                            <small class="text-muted">
+                                <i class="bi bi-folder"></i> {{ task.project.name }} 
+                                &bull; Termin: {{ task.due_date|default:"brak" }}
+                            </small>
+                        </div>
+                        <span class="badge rounded-pill 
+                            {% if task.priority == 'high' %}bg-danger
+                            {% elif task.priority == 'medium' %}bg-warning text-dark
+                            {% else %}bg-info{% endif %}">
+                            {{ task.get_priority_display }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+                        Wszystko zrobione! Brak pilnych zadań.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Szybkie akcje</h5>
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'project-list' %}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-list-task"></i> Zobacz wszystkie projekty
+                    </a>
+                    <a href="{% url 'team-list' %}" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-people"></i> Zarządzaj Zespołami
+                    </a>
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-secondary text-start">
+                        <i class="bi bi-person-gear"></i> Edytuj Profil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

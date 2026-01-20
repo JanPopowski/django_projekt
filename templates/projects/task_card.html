@@ -1,0 +1,25 @@
+<div class="card mb-2 shadow-sm card-hover">
+    <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-start">
+            <h6 class="card-title mb-1 text-truncate" style="max-width: 85%;">{{ task.title }}</h6>
+            
+            <a href="{% url 'task-edit' task.id %}" class="text-muted small" title="Edytuj zadanie">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+        </div>
+        
+        <p class="card-text small text-muted mb-2">{{ task.description|truncatechars:40 }}</p>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-secondary bg-opacity-10 text-secondary border" style="font-size: 0.65rem">
+                {{ task.assigned_to.username }}
+            </span>
+            
+            {% if task.priority == 'high' %}
+                <i class="bi bi-exclamation-circle-fill text-danger" title="Wysoki priorytet"></i>
+            {% elif task.priority == 'medium' %}
+                <i class="bi bi-record-circle text-warning" title="Średni priorytet"></i>
+            {% endif %}
+        </div>
+    </div>
+</div>

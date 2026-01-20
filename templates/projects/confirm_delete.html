@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow border-danger">
+            <div class="card-body p-5">
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                <h3 class="text-danger mt-3 mb-4">Czy na pewno chcesz to usunąć?</h3>
+                <p class="lead text-muted mb-4">
+                    Usuwasz element: <strong>"{{ object }}"</strong>.<br>
+                    Tej operacji nie można cofnąć.
+                </p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <button type="submit" class="btn btn-danger btn-lg px-4 gap-3">Tak, usuń trwale</button>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg px-4">Anuluj</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,7 +1,14 @@
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from .forms import AddMemberForm, ProjectForm, TaskForm
 from .models import Comment, Project, Task, Team
 from .permissions import IsTeamMember, IsTeamOwner
 from .serializers import AddMemberSerializer, CommentSerializer, ProjectSerializer, TaskSerializer, TeamSerializer
@@ -125,3 +132,152 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+        
+        
+        
+# --- WIDOKI HTML (FRONTEND) ---
+
+class DashboardView(LoginRequiredMixin, ListView):
+    template_name = 'dashboard.html'
+    context_object_name = 'my_tasks'
+
+    def get_queryset(self):
+        # Dashboard: Moje pilne zadania (wszystko co nie jest done)
+        return Task.objects.filter(assigned_to=self.request.user).exclude(status='done').order_by('due_date')
+
+class ProjectListView(LoginRequiredMixin, ListView):
+    model = Project
+    template_name = 'projects/project_list.html'
+    context_object_name = 'projects'
+
+    def get_queryset(self):
+        return Project.objects.filter(team__members=self.request.user).distinct()
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'projects/project_detail.html'
+    context_object_name = 'project'
+
+    def get_queryset(self):
+        # Zabezpieczenie: user widzi tylko swoje projekty
+        return Project.objects.filter(team__members=self.request.user).distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tasks = self.object.tasks.select_related('assigned_to').all()
+        # Rozdzielamy zadania na kolumny KANBAN
+        context['todo_tasks'] = tasks.filter(status='todo')
+        context['in_progress_tasks'] = tasks.filter(status='in_progress')
+        context['done_tasks'] = tasks.filter(status='done')
+        return context
+
+class ProjectCreateView(LoginRequiredMixin, CreateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'projects/project_form.html'
+    success_url = reverse_lazy('project-list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user  # Przekazujemy usera do formularza
+        return kwargs
+
+class TaskCreateView(LoginRequiredMixin, CreateView):
+    model = Task
+    form_class = TaskForm
+    template_name = 'projects/task_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        project = get_object_or_404(Project, pk=self.kwargs['project_id'])
+        kwargs['project'] = project
+        return kwargs
+
+    def form_valid(self, form):
+        project = get_object_or_404(Project, pk=self.kwargs['project_id'])
+        form.instance.project = project
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('project-detail', kwargs={'pk': self.kwargs['project_id']})
+    
+    
+    
+
+# 1. Edycja i Usuwanie Projektu
+class ProjectUpdateView(LoginRequiredMixin, UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'projects/project_form.html'
+    success_url = reverse_lazy('project-list')
+    
+    def get_queryset(self):
+        return Project.objects.filter(team__members=self.request.user)
+
+class ProjectDeleteView(LoginRequiredMixin, DeleteView):
+    model = Project
+    template_name = 'projects/confirm_delete.html'
+    success_url = reverse_lazy('project-list')
+    
+    def get_queryset(self):
+        # Tylko właściciel zespołu może usuwać projekty (opcjonalna logika)
+        return Project.objects.filter(team__owner=self.request.user)
+
+# 2. Edycja i Usuwanie Zadania
+class TaskUpdateView(LoginRequiredMixin, UpdateView):
+    model = Task
+    form_class = TaskForm
+    template_name = 'projects/task_form.html'
+    
+    def get_queryset(self):
+        return Task.objects.filter(project__team__members=self.request.user)
+
+    def get_success_url(self):
+        return reverse('project-detail', kwargs={'pk': self.object.project.id})
+
+class TaskDeleteView(LoginRequiredMixin, DeleteView):
+    model = Task
+    template_name = 'projects/confirm_delete.html'
+    
+    def get_queryset(self):
+        return Task.objects.filter(project__team__members=self.request.user)
+
+    def get_success_url(self):
+        return reverse('project-detail', kwargs={'pk': self.object.project.id})
+
+# 3. Zarządzanie Zespołami (Lista i Dodawanie członków)
+class TeamListView(LoginRequiredMixin, ListView):
+    model = Team
+    template_name = 'projects/team_list.html'
+    context_object_name = 'teams'
+
+    def get_queryset(self):
+        return Team.objects.filter(members=self.request.user)
+
+class TeamDetailView(LoginRequiredMixin, DetailView):
+    model = Team
+    template_name = 'projects/team_detail.html'
+    
+    def get_queryset(self):
+        return Team.objects.filter(members=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['add_member_form'] = AddMemberForm()
+        return context
+
+class TeamAddMemberView(LoginRequiredMixin, FormView):
+    form_class = AddMemberForm
+    template_name = 'projects/team_detail.html' # W razie błędu
+
+    def form_valid(self, form):
+        team = get_object_or_404(Team, pk=self.kwargs['pk'], owner=self.request.user)
+        username = form.cleaned_data['username']
+        try:
+            user = User.objects.get(username=username)
+            team.members.add(user)
+            messages.success(self.request, f"Dodano użytkownika {username}.")
+        except User.DoesNotExist:
+            messages.error(self.request, "Użytkownik nie istnieje.")
+        
+        return redirect('team-detail', pk=team.pk)

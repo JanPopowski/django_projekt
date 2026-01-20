@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from rest_framework import serializers
 
-from .models import Project, Team
+from .models import Comment, Project, Task, Team
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -10,7 +10,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ["id", "name", "description", "owner", "members", "created_at"]
+        fields = ["id", "name", "description", "owner", "members"]
         read_only_fields = ["members", "created_at"]
 
 
@@ -27,16 +27,13 @@ class AddMemberSerializer(serializers.Serializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "team", "created_at"]
+        fields = ["id", "name", "description", "team"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and hasattr(request, "user"):
             self.fields["team"].queryset = Team.objects.filter(members=request.user)
-
-
-from .models import Comment, Project, Task, Team
 
 
 class TaskSerializer(serializers.ModelSerializer):
