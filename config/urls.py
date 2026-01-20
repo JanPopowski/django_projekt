@@ -22,11 +22,13 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
 from apps.users.views import MyProfileView
-from apps.projects.views import TeamViewSet, ProjectViewSet
+from apps.projects.views import TeamViewSet, ProjectViewSet, TaskViewSet, CommentViewSet, MyTaskListView
 
 router = DefaultRouter()
 router.register(r'teams', TeamViewSet, basename='team')
 router.register(r'projects', ProjectViewSet, basename='project')
+router.register(r'tasks', TaskViewSet, basename='task')
+router.register(r'comments', CommentViewSet, basename='comment')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,8 +40,9 @@ urlpatterns = [
     path('api/auth/', include('djoser.urls.jwt')),
     
     path('my-profile/', MyProfileView.as_view(), name='my_profile'),
+    path('my-tasks', MyTaskListView.as_view(), name='my_tasks'),
 
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]
 
 if settings.DEBUG:
