@@ -19,7 +19,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
+
 from apps.users.views import MyProfileView
+from apps.projects.views import TeamViewSet, ProjectViewSet
+
+router = DefaultRouter()
+router.register(r'teams', TeamViewSet, basename='team')
+router.register(r'projects', ProjectViewSet, basename='project')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +38,8 @@ urlpatterns = [
     path('api/auth/', include('djoser.urls.jwt')),
     
     path('my-profile/', MyProfileView.as_view(), name='my_profile'),
+
+    path('api/', include(router.urls)),
 ]
 
 if settings.DEBUG:
