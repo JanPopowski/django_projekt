@@ -3,8 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
-.venv/
-env/
+
 
 # --- Django ---
 *.log
@@ -17,11 +16,6 @@ db.sqlite3-journal
 media/
 !media/.gitkeep
 
-# --- Zmienne środowiskowe ---
-.env
-.env.db
-config/.env
-.env.*
 
 # --- Docker ---
 postgres_data/
