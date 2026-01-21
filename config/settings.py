@@ -153,9 +153,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = "noreply@myproject.com"
-SITE_NAME = "Django Projekt"
+SITE_NAME = "DjangoProjekt"
+
+EMAIL_HOST = 'mailpit' 
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
 
 
 # Static files (CSS, JavaScript, Images)

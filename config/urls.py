@@ -28,6 +28,7 @@ from apps.projects.views import (
     TeamDetailView,
     TeamListView,
     TeamViewSet,
+    update_task_status,
 )
 from apps.users.views import MyProfileView, ProfileDetailView, ProfileUpdateView, RegisterView
 
@@ -41,8 +42,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     # --- FRONTEND: AUTH (Logowanie) ---
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/profile/', ProfileDetailView.as_view(), name='my_profile'),
     path('accounts/profile/edit', ProfileUpdateView.as_view(), name='profile_edit'),
     path('accounts/register/', RegisterView.as_view(), name='register'),
@@ -62,6 +62,7 @@ urlpatterns = [
 
     path('tasks/<int:pk>/edit/', TaskUpdateView.as_view(), name='task-edit'),
     path('tasks/<int:pk>/delete/', TaskDeleteView.as_view(), name='task-delete'),
+    path('tasks/<int:pk>/status/<str:status>/', update_task_status, name='task-update-status'),
 
     path('teams/', TeamListView.as_view(), name='team-list'),
     path('teams/add/', TeamCreateView.as_view(), name='team-create'),

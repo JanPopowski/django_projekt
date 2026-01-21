@@ -1,25 +1,56 @@
 <div class="card mb-2 shadow-sm card-hover">
     <div class="card-body p-2">
         <div class="d-flex justify-content-between align-items-start">
-            <h6 class="card-title mb-1 text-truncate" style="max-width: 85%;">{{ task.title }}</h6>
+            <h6 class="card-title mb-1 text-truncate" style="max-width: 75%;">{{ task.title }}</h6>
             
-            <a href="{% url 'task-edit' task.id %}" class="text-muted small" title="Edytuj zadanie">
-                <i class="bi bi-pencil-square"></i>
-            </a>
+            <div class="d-flex">
+                {% if task.attachment %}
+                <a href="{{ task.attachment.url }}" target="_blank" class="text-primary me-2" title="Pobierz załącznik">
+                    <i class="bi bi-paperclip"></i>
+                </a>
+                {% endif %}
+
+                <a href="{% url 'task-edit' task.id %}" class="text-muted small" title="Edytuj zadanie">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+            </div>
         </div>
         
         <p class="card-text small text-muted mb-2">{{ task.description|truncatechars:40 }}</p>
         
-        <div class="d-flex justify-content-between align-items-center">
-            <span class="badge bg-secondary bg-opacity-10 text-secondary border" style="font-size: 0.65rem">
-                {{ task.assigned_to.username }}
-            </span>
-            
-            {% if task.priority == 'high' %}
-                <i class="bi bi-exclamation-circle-fill text-danger" title="Wysoki priorytet"></i>
-            {% elif task.priority == 'medium' %}
-                <i class="bi bi-record-circle text-warning" title="Średni priorytet"></i>
-            {% endif %}
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="d-flex align-items-center">
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border me-2" style="font-size: 0.65rem">
+                    {{ task.assigned_to.username }}
+                </span>
+                {% if task.priority == 'high' %}
+                    <i class="bi bi-exclamation-circle-fill text-danger small" title="Wysoki priorytet"></i>
+                {% elif task.priority == 'medium' %}
+                    <i class="bi bi-record-circle text-warning small" title="Średni priorytet"></i>
+                {% endif %}
+            </div>
+
+            <div class="btn-group btn-group-sm">
+                {% if task.status == 'in_progress' or task.status == 'done' %}
+                <a href="{% url 'task-update-status' task.id 'todo' %}" class="btn btn-outline-secondary py-0 px-1" title="Cofnij do 'Do zrobienia'">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                {% endif %}
+                
+                {% if task.status == 'todo' %}
+                <a href="{% url 'task-update-status' task.id 'in_progress' %}" class="btn btn-outline-primary py-0 px-1" title="Rozpocznij (W trakcie)">
+                    <i class="bi bi-play-fill"></i>
+                </a>
+                {% elif task.status == 'in_progress' %}
+                <a href="{% url 'task-update-status' task.id 'done' %}" class="btn btn-outline-success py-0 px-1" title="Zakończ">
+                    <i class="bi bi-check-lg"></i>
+                </a>
+                {% elif task.status == 'done' %}
+                <a href="{% url 'task-update-status' task.id 'in_progress' %}" class="btn btn-outline-warning py-0 px-1" title="Wznów">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

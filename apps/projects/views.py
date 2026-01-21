@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect
@@ -301,3 +302,14 @@ class TeamCreateView(LoginRequiredMixin, CreateView):
         team.save()
         team.members.add(self.request.user)
         return super().form_valid(form)
+    
+    
+@login_required
+def update_task_status(request, pk, status):
+    task = get_object_or_404(Task, pk=pk, project__team__members=request.user)
+    
+    if status in dict(Task.STATUS_CHOICES):
+        task.status = status
+        task.save()
+    
+    return redirect('project-detail', pk=task.project.id)
