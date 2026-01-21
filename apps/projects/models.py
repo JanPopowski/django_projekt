@@ -52,6 +52,7 @@ class Task(models.Model):
 
 
 class Comment(models.Model):
+    project = models.ForeignKey(Project, related_name='comments', on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     content = models.TextField(verbose_name="Treść komentarza")

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Project, Task, Team
+from .models import Comment, Project, Task, Team
 
 
 class ProjectForm(forms.ModelForm):
@@ -38,3 +38,18 @@ class TaskForm(forms.ModelForm):
 
 class AddMemberForm(forms.Form):
     username = forms.CharField(label="Login użytkownika", widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        labels = {
+            'content': ''
+        }
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Napisz komentarz...'
+            }),
+        }

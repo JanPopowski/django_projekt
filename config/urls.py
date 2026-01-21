@@ -21,6 +21,7 @@ from apps.projects.views import (
     ProjectViewSet,
     TaskCreateView,
     TaskDeleteView,
+    TaskDetailView,
     TaskUpdateView,
     TaskViewSet,
     TeamAddMemberView,
@@ -63,6 +64,7 @@ urlpatterns = [
     path('tasks/<int:pk>/edit/', TaskUpdateView.as_view(), name='task-edit'),
     path('tasks/<int:pk>/delete/', TaskDeleteView.as_view(), name='task-delete'),
     path('tasks/<int:pk>/status/<str:status>/', update_task_status, name='task-update-status'),
+    path('tasks/<int:pk>/', TaskDetailView.as_view(), name='task-detail'),
 
     path('teams/', TeamListView.as_view(), name='team-list'),
     path('teams/add/', TeamCreateView.as_view(), name='team-create'),

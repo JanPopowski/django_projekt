@@ -9,7 +9,7 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .forms import AddMemberForm, ProjectForm, TaskForm
+from .forms import AddMemberForm, CommentForm, ProjectForm, TaskForm
 from .models import Comment, Project, Task, Team
 from .permissions import IsTeamMember, IsTeamOwner
 from .serializers import AddMemberSerializer, CommentSerializer, ProjectSerializer, TaskSerializer, TeamSerializer
@@ -313,3 +313,31 @@ def update_task_status(request, pk, status):
         task.save()
     
     return redirect('project-detail', pk=task.project.id)
+
+
+class TaskDetailView(LoginRequiredMixin, DetailView):
+    model = Task
+    template_name = 'projects/task_detail.html'
+    context_object_name = 'task'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comment_form'] = CommentForm()
+        context['comments'] = self.object.comments.all().order_by('created_at')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = CommentForm(request.POST)
+        
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.task = self.object
+            comment.author = request.user
+            comment.project = self.object.project
+            comment.save()
+            return redirect('task-detail', pk=self.object.pk)
+        
+        context = self.get_context_data()
+        context['comment_form'] = form
+        return self.render_to_response(context)

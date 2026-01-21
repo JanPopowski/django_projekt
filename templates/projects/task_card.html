@@ -1,14 +1,23 @@
 <div class="card mb-2 shadow-sm card-hover">
     <div class="card-body p-2">
         <div class="d-flex justify-content-between align-items-start">
-            <h6 class="card-title mb-1 text-truncate" style="max-width: 75%;">{{ task.title }}</h6>
+            <h6 class="card-title mb-1 text-truncate" style="max-width: 65%;">
+                <a href="{% url 'task-detail' task.id %}" class="text-decoration-none text-dark">
+                    {{ task.title }}
+                </a>
+            </h6>
             
-            <div class="d-flex">
+            <div class="d-flex align-items-center">
+                
                 {% if task.attachment %}
                 <a href="{{ task.attachment.url }}" target="_blank" class="text-primary me-2" title="Pobierz załącznik">
                     <i class="bi bi-paperclip"></i>
                 </a>
                 {% endif %}
+
+                <a href="{% url 'task-detail' task.id %}" class="text-info me-2" title="Szczegóły i komentarze">
+                    <i class="bi bi-eye-fill"></i>
+                </a>
 
                 <a href="{% url 'task-edit' task.id %}" class="text-muted small" title="Edytuj zadanie">
                     <i class="bi bi-pencil-square"></i>
@@ -27,6 +36,12 @@
                     <i class="bi bi-exclamation-circle-fill text-danger small" title="Wysoki priorytet"></i>
                 {% elif task.priority == 'medium' %}
                     <i class="bi bi-record-circle text-warning small" title="Średni priorytet"></i>
+                {% endif %}
+                
+                {% if task.comments.count > 0 %}
+                <span class="ms-2 text-muted small" style="font-size: 0.7rem;">
+                    <i class="bi bi-chat-left-text"></i> {{ task.comments.count }}
+                </span>
                 {% endif %}
             </div>
 
