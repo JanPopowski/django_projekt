@@ -202,9 +202,6 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         return reverse('project-detail', kwargs={'pk': self.kwargs['project_id']})
     
     
-    
-
-# 1. Edycja i Usuwanie Projektu
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
     form_class = ProjectForm
@@ -214,6 +211,12 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     def get_queryset(self):
         return Project.objects.filter(team__members=self.request.user)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    
 class ProjectDeleteView(LoginRequiredMixin, DeleteView):
     model = Project
     template_name = 'projects/confirm_delete.html'
@@ -234,6 +237,10 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('project-detail', kwargs={'pk': self.object.project.id})
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['project'] = self.object.project
+        return kwargs
 
 class TaskDeleteView(LoginRequiredMixin, DeleteView):
     model = Task
@@ -281,3 +288,16 @@ class TeamAddMemberView(LoginRequiredMixin, FormView):
             messages.error(self.request, "Użytkownik nie istnieje.")
         
         return redirect('team-detail', pk=team.pk)
+    
+class TeamCreateView(LoginRequiredMixin, CreateView):
+    model = Team
+    fields = ['name']
+    template_name = 'projects/team_form.html'
+    success_url = reverse_lazy('team-list')
+
+    def form_valid(self, form):
+        team = form.save(commit=False)
+        team.owner = self.request.user
+        team.save()
+        team.members.add(self.request.user)
+        return super().form_valid(form)
