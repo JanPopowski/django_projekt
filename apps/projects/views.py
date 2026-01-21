@@ -143,8 +143,12 @@ class DashboardView(LoginRequiredMixin, ListView):
     context_object_name = 'my_tasks'
 
     def get_queryset(self):
-        # Dashboard: Moje pilne zadania (wszystko co nie jest done)
         return Task.objects.filter(assigned_to=self.request.user).exclude(status='done').order_by('due_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['teams'] = Team.objects.filter(members=self.request.user).distinct()
+        return context
 
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
@@ -334,7 +338,6 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
             comment = form.save(commit=False)
             comment.task = self.object
             comment.author = request.user
-            comment.project = self.object.project
             comment.save()
             return redirect('task-detail', pk=self.object.pk)
         

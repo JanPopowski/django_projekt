@@ -50,6 +50,30 @@
     </div>
 
     <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">
+                <i class="bi bi-people-fill text-primary"></i> Twoje Zespoły
+            </div>
+            <div class="list-group list-group-flush">
+                {% if teams %}
+                    {% for team in teams %}
+                    <a href="{% url 'team-detail' team.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span class="fw-medium">{{ team.name }}</span>
+                        <span class="badge bg-light text-dark border rounded-pill">
+                            {{ team.members.count }} <i class="bi bi-person-fill"></i>
+                        </span>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-4 text-center text-muted small">
+                        Nie należysz jeszcze do żadnego zespołu.
+                        <br>
+                        <a href="{% url 'team-create' %}" class="text-decoration-none fw-bold mt-2 d-inline-block">Utwórz pierwszy zespół</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
         <div class="card shadow-sm mb-3">
             <div class="card-body">
                 <h5 class="card-title">Szybkie akcje</h5>

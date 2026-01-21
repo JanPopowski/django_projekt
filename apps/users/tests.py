@@ -1,6 +1,6 @@
-from django.test import TestCase
 from django.contrib.auth.models import User
-from .models import Profile  # <--- Zauważ: importujemy tylko Profile, bo jesteśmy w users
+from django.test import TestCase
+
 
 class UserSignalTests(TestCase):
     def test_profile_created_on_user_creation(self):

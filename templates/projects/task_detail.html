@@ -61,18 +61,19 @@
                     {% for comment in comments %}
                     <div class="d-flex mb-3">
                         <div class="flex-shrink-0">
-                            {% if comment.user.profile.avatar %}
-                                <img src="{{ comment.user.profile.avatar.url }}" class="rounded-circle" width="40" height="40">
+                            {% if comment.author.profile.avatar %}
+                                <img src="{{ comment.author.profile.avatar.url }}" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
                             {% else %}
                                 <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    {{ comment.user.username|make_list|first|upper }}
+                                    {{ comment.author.username|make_list|first|upper }}
                                 </div>
                             {% endif %}
                         </div>
+                        
                         <div class="flex-grow-1 ms-3">
                             <div class="bg-white p-3 rounded shadow-sm">
                                 <div class="d-flex justify-content-between mb-1">
-                                    <strong class="small">{{ comment.user.username }}</strong>
+                                    <strong class="small">{{ comment.author.username }}</strong>
                                     <small class="text-muted" style="font-size: 0.75rem;">{{ comment.created_at|date:"d M H:i" }}</small>
                                 </div>
                                 <p class="mb-0 small text-secondary">{{ comment.content|linebreaksbr }}</p>
