@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -11,64 +12,39 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
-from drf_spectacular.utils import OpenApiTypes, extend_schema
-from rest_framework import generics, permissions, status, viewsets
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
+from rest_framework import generics, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .forms import AddMemberForm, CommentForm, ProjectForm, TaskForm
-from .models import Comment, Project, Task, Team
-from .permissions import IsTeamMember, IsTeamOwner
-from .serializers import AddMemberSerializer, CommentSerializer, ProjectSerializer, TaskSerializer, TeamSerializer
+from .models import Project, Task, Team
+from .permissions import IsTeamMember
+from .serializers import ProjectSerializer, TaskSerializer
 
 
-class TeamViewSet(viewsets.ModelViewSet):
-    serializer_class = TeamSerializer
+class ProjectViewSet(viewsets.GenericViewSet):
+    """
+    ViewSet ograniczony tylko do obsługi statystyk.
+    Dziedziczy po GenericViewSet, aby nie wystawiać automatycznie 
+    endpointów CRUD (list, create, delete).
+    """
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
 
     def get_queryset(self):
-        return (
-            Team.objects.prefetch_related("members")
-            .select_related("owner")
-            .filter(members=self.request.user)
-            .distinct()
-        )
-
-    def perform_create(self, serializer):
-        team = serializer.save(owner=self.request.user)
-        team.members.add(self.request.user)
-
-    @action(detail=True, methods=["post"], permission_classes=[IsTeamOwner])
-    def add_member(self, request, pk=None):
-        team = self.get_object()
-        serializer = AddMemberSerializer(data=request.data)
-
-        if serializer.is_valid():
-            user_to_add = serializer.validated_data["login_or_email"]
-
-            if user_to_add in team.members.all():
-                return Response({"message": "Użytkownik już jest w zespole"}, status=status.HTTP_400_BAD_REQUEST)
-
-            team.members.add(user_to_add)
-            return Response(
-                {"message": f"Dodano użytkownika {user_to_add.username} do zespołu"}, status=status.HTTP_200_OK
-            )
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
+        return Project.objects.filter(team__members=self.request.user).distinct()
     
     @extend_schema(
         summary="Pobierz statystyki projektu",
-        description="Zwraca liczbę zadań ogółem i zakończonych dla danego projektu ",
+        description="Zwraca liczbę zadań ogółem i zakończonych dla danego projektu.",
         responses={200: OpenApiTypes.OBJECT},
     )
-    
     @action(detail=True, methods=["get"])
     def stats(self, request, pk=None):
         """
         Endpoint: GET /api/projects/{id}/stats/
-        Zwraca liczbę zadań ogółem vs. zakończonych.
         """
         project = self.get_object()
 
@@ -87,66 +63,41 @@ class TeamViewSet(viewsets.ModelViewSet):
         )
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
-
-    def get_queryset(self):
-        return Project.objects.filter(team__members=self.request.user).distinct()
-
-
-class TaskViewSet(viewsets.ModelViewSet):
-    serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
-
-    def get_queryset(self):
-        queryset = (
-            Task.objects.select_related("project", "assigned_to")
-            .filter(project__team__members=self.request.user)
-            .distinct()
-        )
-
-        status_param = self.request.query_params.get("status")
-        if status_param:
-            queryset = queryset.filter(status=status_param)
-
-        return queryset
-
-
 class MyTaskListView(generics.ListAPIView):
+    """
+    Endpoint: GET /api/my-tasks/
+    """
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Task.objects.filter(assigned_to=user)
+        
+        queryset = Task.objects.select_related("project", "project__team").filter(assigned_to=user)
 
         status_param = self.request.query_params.get("status")
         if status_param:
             queryset = queryset.filter(status=status_param)
         else:
+            # Domyślnie wykluczamy zakończone, jeśli nie podano statusu
             queryset = queryset.exclude(status="done")
-
-        from django.db.models import F
 
         return queryset.order_by(F("due_date").asc(nulls_last=True), "created_at")
 
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
-
-    def get_queryset(self):
-        queryset = Comment.objects.filter(task__project__team__members=self.request.user)
-
-        task_id = self.request.query_params.get("task")
-        if task_id:
-            queryset = queryset.filter(task_id=task_id)
-
-        return queryset
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    @extend_schema(
+        summary="Pobierz moje zadania",
+        parameters=[
+            OpenApiParameter(
+                name='status',
+                description='Filtruj po statusie (todo, in_progress, done)',
+                required=False,
+                type=OpenApiTypes.STR,
+                enum=['todo', 'in_progress', 'done']
+            )
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
         
         
         

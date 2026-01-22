@@ -11,3 +11,4 @@ drf-spectacular
 ruff
 djangorestframework-simplejwt
 djoser
+django-cors-headers

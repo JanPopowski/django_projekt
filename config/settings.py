@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "djoser",
     "apps.users",
     "apps.projects",
+    "corsheaders",
 ]
 
 DJOSER = {
@@ -64,6 +65,7 @@ DJOSER = {
 }
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -130,26 +132,27 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
-    # Opcjonalnie: domyślnie wymagaj logowania wszędzie w API
+    #  domyślnie wymagaj logowania wszędzie w API
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
-# Konfiguracja Swaggera (opis w dokumentacji)
+# Konfiguracja Swaggera 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Twoja Nazwa API',
     'DESCRIPTION': 'Dokumentacja API do zarządzania projektami',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    # Poniższe ustawienia są kluczowe dla logowania:
     'COMPONENT_SPLIT_REQUEST': True,
     
-    # To dodaje definicje bezpieczeństwa (dla Session Auth i Token Auth)
-    # Wybierz te metody, których używasz w projekcie
-    'SECURITY': [
-        {'Basic': []},      # Logowanie login/hasło (popup przeglądarki)
-        {'Session': []},    # Ciasteczko sesyjne (dobre, jeśli jesteś zalogowany w adminie)
-        # {'Bearer': []},   # Odkomentuj, jeśli używasz tokenów JWT/Bearer
-    ],
+    'SECURITY': [{'Bearer': []}], 
+    
+    'SCHEMES': {
+        'Bearer': {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT',
+        }
+    }
 }
 
 
@@ -197,3 +200,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+
+CORS_ALLOW_ALL_ORIGINS = True

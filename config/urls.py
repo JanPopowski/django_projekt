@@ -9,7 +9,6 @@ from rest_framework.routers import DefaultRouter
 
 # Import widoków API oraz Frontendowych (DashboardView, ProjectListView itd.)
 from apps.projects.views import (
-    CommentViewSet,
     DashboardView,
     MyTaskListView,
     ProjectCreateView,
@@ -22,21 +21,17 @@ from apps.projects.views import (
     TaskDeleteView,
     TaskDetailView,
     TaskUpdateView,
-    TaskViewSet,
     TeamAddMemberView,
     TeamCreateView,
     TeamDetailView,
     TeamListView,
-    TeamViewSet,
     update_task_status,
 )
 from apps.users.views import MyProfileView, ProfileDetailView, ProfileUpdateView, RegisterView
 
 router = DefaultRouter()
-router.register(r"teams", TeamViewSet, basename="api-team")
 router.register(r"projects", ProjectViewSet, basename="api-project")
-router.register(r"tasks", TaskViewSet, basename="api-task")
-router.register(r"comments", CommentViewSet, basename="api-comment")
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),

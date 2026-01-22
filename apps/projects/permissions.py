@@ -8,6 +8,10 @@ class IsTeamMember(permissions.BasePermission):
 
         if hasattr(obj, "team"):
             return request.user in obj.team.members.all()
+        
+        if hasattr(obj, "project"):
+            return request.user in obj.project.team.members.all()
+        
         return False
 
 
