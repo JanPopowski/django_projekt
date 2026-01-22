@@ -1,10 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    FormView,
+    ListView,
+    UpdateView,
+)
+from drf_spectacular.utils import OpenApiTypes, extend_schema
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -31,7 +38,6 @@ class TeamViewSet(viewsets.ModelViewSet):
         team = serializer.save(owner=self.request.user)
         team.members.add(self.request.user)
 
-    # Dodatkowa akcja: POST /api/teams/{id}/add_member/
     @action(detail=True, methods=["post"], permission_classes=[IsTeamOwner])
     def add_member(self, request, pk=None):
         team = self.get_object()
@@ -49,7 +55,15 @@ class TeamViewSet(viewsets.ModelViewSet):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
+    
+    
+    @extend_schema(
+        summary="Pobierz statystyki projektu",
+        description="Zwraca liczbę zadań ogółem i zakończonych dla danego projektu ",
+        responses={200: OpenApiTypes.OBJECT},
+    )
+    
     @action(detail=True, methods=["get"])
     def stats(self, request, pk=None):
         """
@@ -184,7 +198,7 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user  # Przekazujemy usera do formularza
+        kwargs['user'] = self.request.user
         return kwargs
 
 class TaskCreateView(LoginRequiredMixin, CreateView):
@@ -275,24 +289,39 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['add_member_form'] = AddMemberForm()
+        
+        context['add_member_form'] = AddMemberForm(team=self.object)
+        
         return context
-
 class TeamAddMemberView(LoginRequiredMixin, FormView):
     form_class = AddMemberForm
-    template_name = 'projects/team_detail.html' # W razie błędu
+    template_name = 'projects/team_detail.html'
+
+    def get_form_kwargs(self):
+        """
+        Przekazujemy instancję zespołu do formularza,
+        aby metoda clean() mogła wykonać walidację.
+        """
+        kwargs = super().get_form_kwargs()
+        team = get_object_or_404(Team, pk=self.kwargs['pk'], owner=self.request.user)
+        kwargs['team'] = team
+        return kwargs
 
     def form_valid(self, form):
-        team = get_object_or_404(Team, pk=self.kwargs['pk'], owner=self.request.user)
-        username = form.cleaned_data['username']
-        try:
-            user = User.objects.get(username=username)
-            team.members.add(user)
-            messages.success(self.request, f"Dodano użytkownika {username}.")
-        except User.DoesNotExist:
-            messages.error(self.request, "Użytkownik nie istnieje.")
+        team = form.team
+        user = form.user_to_add
+        
+        team.members.add(user)
+        messages.success(self.request, f"Dodano użytkownika {user.username} do zespołu.")
         
         return redirect('team-detail', pk=team.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['team'] = get_object_or_404(Team, pk=self.kwargs['pk'], owner=self.request.user)
+        return context
+    
+    
     
 class TeamCreateView(LoginRequiredMixin, CreateView):
     model = Team

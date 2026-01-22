@@ -136,9 +136,20 @@ REST_FRAMEWORK = {
 
 # Konfiguracja Swaggera (opis w dokumentacji)
 SPECTACULAR_SETTINGS = {
-    "TITLE": "System Zarządzaniaz Zadaniami API",
-    "DESCRIPTION": "API do obsługi projektów, zespołów i zadań",
-    "VERSION": "1.0.0",
+    'TITLE': 'Twoja Nazwa API',
+    'DESCRIPTION': 'Dokumentacja API do zarządzania projektami',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # Poniższe ustawienia są kluczowe dla logowania:
+    'COMPONENT_SPLIT_REQUEST': True,
+    
+    # To dodaje definicje bezpieczeństwa (dla Session Auth i Token Auth)
+    # Wybierz te metody, których używasz w projekcie
+    'SECURITY': [
+        {'Basic': []},      # Logowanie login/hasło (popup przeglądarki)
+        {'Session': []},    # Ciasteczko sesyjne (dobre, jeśli jesteś zalogowany w adminie)
+        # {'Bearer': []},   # Odkomentuj, jeśli używasz tokenów JWT/Bearer
+    ],
 }
 
 

@@ -45,11 +45,26 @@
                         {% endfor %}
                     {% endif %}
 
+                    {% if form.errors %}
+                        <div class="alert alert-danger small p-2">
+                            <ul class="mb-0 ps-3">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <div class="mb-3">
                         <label class="form-label small text-muted">Login użytkownika</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-person-plus"></i></span>
-                            <input type="text" name="username" class="form-control" placeholder="np. jan_kowalski" required>
+                            <input type="text" name="username" class="form-control {% if form.errors %}is-invalid{% endif %}" placeholder="np. jan_kowalski" required>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Dodaj do zespołu</button>

@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 # Import widoków logowania/wylogowania
-from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
